@@ -1,0 +1,61 @@
+### Получить все посты (из базы данных Postgres)
+GET http://localhost:3000/posts
+
+### Фильтр по platform и status
+GET http://localhost:3000/posts?platform=telegram&status=scheduled
+
+### Получить один пост по id (используй реальный id из ответа GET /posts)
+GET http://localhost:3000/posts/2
+
+### Получить несуществующий пост (проверка 404)
+GET http://localhost:3000/posts/999
+
+### Создать новый пост
+POST http://localhost:3000/posts
+Content-Type: application/json
+
+{
+  "content": "Тестовый пост",
+  "platform": "telegram",
+  "scheduledAt": "2026-09-20T10:00:00.000Z",
+  "priority": 2
+}
+
+### Создать пост с ошибкой (проверка 400)
+POST http://localhost:3000/posts
+Content-Type: application/json
+
+{
+  "content": ""
+}
+
+### Обновить пост
+PUT http://localhost:3000/posts/2
+Content-Type: application/json
+
+{
+  "content": "Обновлённый пост",
+  "platform": "vk",
+  "scheduledAt": "2026-09-15T12:00:00.000Z",
+  "status": "published",
+  "priority": 3
+}
+
+### Обновить несуществующий пост (проверка 404)
+PUT http://localhost:3000/posts/999
+Content-Type: application/json
+
+{
+  "content": "x",
+  "platform": "vk",
+  "scheduledAt": "2026-09-15T12:00:00.000Z"
+}
+
+### Удалить пост
+DELETE http://localhost:3000/posts/3
+
+### Удалить тот же пост ещё раз (проверка 404)
+DELETE http://localhost:3000/posts/3
+
+### Запрос на несуществующий маршрут (проверка общего 404)
+GET http://localhost:3000/unknown

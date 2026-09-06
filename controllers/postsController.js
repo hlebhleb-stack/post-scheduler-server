@@ -1,4 +1,4 @@
-const postsModel = require("../models/postsModel");
+const { Post } = require("../models");
 
 const ALLOWED_PLATFORMS = ["instagram", "telegram", "vk", "twitter", "facebook"];
 
@@ -26,23 +26,19 @@ function validatePostData(data, { partial = false } = {}) {
   return errors;
 }
 
-function getAllPosts(req, res) {
-  let result = postsModel.getAll();
-
+async function getAllPosts(req, res) {
+  const where = {};
   const { platform, status } = req.query;
-  if (platform) {
-    result = result.filter((post) => post.platform === platform);
-  }
-  if (status) {
-    result = result.filter((post) => post.status === status);
-  }
+  if (platform) where.platform = platform;
+  if (status) where.status = status;
 
+  const result = await Post.findAll({ where });
   res.status(200).json(result);
 }
 
-function getPostById(req, res) {
+async function getPostById(req, res) {
   const id = Number(req.params.id);
-  const post = postsModel.getById(id);
+  const post = await Post.findByPk(id);
 
   if (!post) {
     return res.status(404).json({ error: `Публикация с id=${id} не найдена` });
@@ -51,19 +47,19 @@ function getPostById(req, res) {
   res.status(200).json(post);
 }
 
-function createPost(req, res) {
+async function createPost(req, res) {
   const errors = validatePostData(req.body);
   if (errors.length > 0) {
     return res.status(400).json({ error: "Некорректные данные запроса", details: errors });
   }
 
-  const post = postsModel.create(req.body);
+  const post = await Post.create(req.body);
   res.status(201).json(post);
 }
 
-function updatePost(req, res) {
+async function updatePost(req, res) {
   const id = Number(req.params.id);
-  const existing = postsModel.getById(id);
+  const existing = await Post.findByPk(id);
 
   if (!existing) {
     return res.status(404).json({ error: `Публикация с id=${id} не найдена` });
@@ -74,19 +70,19 @@ function updatePost(req, res) {
     return res.status(400).json({ error: "Некорректные данные запроса", details: errors });
   }
 
-  const updated = postsModel.update(id, req.body);
-  res.status(200).json(updated);
+  await existing.update(req.body);
+  res.status(200).json(existing);
 }
 
-function deletePost(req, res) {
+async function deletePost(req, res) {
   const id = Number(req.params.id);
-  const existing = postsModel.getById(id);
+  const existing = await Post.findByPk(id);
 
   if (!existing) {
     return res.status(404).json({ error: `Публикация с id=${id} не найдена` });
   }
 
-  postsModel.remove(id);
+  await existing.destroy();
   res.status(204).send();
 }
 

@@ -1,4 +1,7 @@
+require("dotenv").config();
+
 const express = require("express");
+const { sequelize } = require("./models");
 const postsRoutes = require("./routes/postsRoutes");
 
 const app = express();
@@ -25,6 +28,11 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Внутренняя ошибка сервера" });
 });
+
+sequelize
+  .authenticate()
+  .then(() => console.log("Подключение к базе данных установлено"))
+  .catch((err) => console.error("Не удалось подключиться к базе данных:", err.message));
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
