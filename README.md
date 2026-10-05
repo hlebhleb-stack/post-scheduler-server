@@ -1,73 +1,60 @@
 # Post Scheduler API — ИПР1
 
-REST API для сервиса планирования публикаций в социальных сетях. Реализованы аутентификация JWT, ролевая модель, валидация и защита от OWASP Top 10.
+REST API планировщика постов. JWT-аутентификация, роли, Sequelize + PostgreSQL.
 
 ## Стек
 
 - Node.js + Express.js
 - PostgreSQL (Neon) + Sequelize
-- JWT (jsonwebtoken) + bcryptjs
+- JWT + bcryptjs
 - Helmet, express-rate-limit, Joi
 
 ## Запуск
 
 ```bash
-# 1. Установить зависимости
 npm install
-
-# 2. Создать .env (скопировать из .env.example и заполнить)
-cp .env.example .env
-
-# 3. Выполнить миграции
+cp .env.example .env   # заполнить DATABASE_URL, JWT_SECRET
 npx sequelize-cli db:migrate
-
-# 4. (опционально) Загрузить тестовые данные
-npx sequelize-cli db:seed:all
-
-# 5. Запустить сервер
 npm run dev
 ```
+
+Тестовые данные (опционально): `npx sequelize-cli db:seed:all`
 
 ## Роли
 
 | Роль | Права |
 |---|---|
-| `user` | Регистрация, просмотр постов, создание постов |
-| `moderator` | Всё что user + редактирование постов |
-| `admin` | Всё что moderator + удаление постов |
+| `user` | регистрация, просмотр и создание постов |
+| `moderator` | + редактирование |
+| `admin` | + удаление |
 
 ## Эндпоинты
 
 ### Аутентификация
 
-| Метод | URL | Описание | Доступ |
-|---|---|---|---|
-| POST | /auth/register | Регистрация | Публичный |
-| POST | /auth/login | Вход (получение JWT) | Публичный |
-| GET | /auth/me | Информация о себе | Требует токен |
+| Метод | URL | Доступ |
+|---|---|---|
+| POST | /auth/register | публичный |
+| POST | /auth/login | публичный |
+| GET | /auth/me | токен |
 
-### Публикации
+### Посты
 
-| Метод | URL | Описание | Доступ |
-|---|---|---|---|
-| GET | /posts | Список постов | Публичный |
-| GET | /posts/:id | Один пост | Публичный |
-| POST | /posts | Создать пост | user+ |
-| PUT | /posts/:id | Обновить пост | moderator+ |
-| DELETE | /posts/:id | Удалить пост | admin |
+| Метод | URL | Доступ |
+|---|---|---|
+| GET | /posts | публичный |
+| GET | /posts/:id | публичный |
+| POST | /posts | user+ |
+| PUT | /posts/:id | moderator+ |
+| DELETE | /posts/:id | admin |
 
-## Меры безопасности
+## Безопасность
 
-**Обязательные:**
-- JWT-аутентификация с хешированием паролей (bcrypt)
-- Ролевая модель: user / moderator / admin
-- Валидация всех входных данных (Joi)
-- Защита от SQL-инъекций через Sequelize (параметризованные запросы)
-- Helmet (XSS, clickjacking и др. заголовки)
-- Глобальный rate limiting (100 req / 15 min)
-- Логирование подозрительных действий (неудачные входы, доступ без прав, rate limit)
-
-**Дополнительные (из таблицы ИПР):**
-- №3: Проверка сложности пароля (мин. 8 симв., цифра, спецсимвол)
-- №12: Ограничение размера тела запроса 10KB (защита от DoS)
-- №24: Generic errors в продакшене (`NODE_ENV=production`)
+- bcrypt для паролей, JWT для сессий
+- валидация входных данных через Joi
+- параметризованные запросы (Sequelize)
+- Helmet + rate limit 100 req/15 min
+- логирование неудачных входов и нарушений прав доступа
+- ограничение тела запроса до 10KB
+- generic errors в продакшене (`NODE_ENV=production`)
+- проверка сложности пароля (мин. 8 симв., цифра, спецсимвол)
