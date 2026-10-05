@@ -22,7 +22,7 @@ async function getPostById(req, res) {
 }
 
 async function createPost(req, res) {
-  const post = await Post.create(req.body);
+  const post = await Post.create({ ...req.body, UserId: req.user.id });
   res.status(201).json(post);
 }
 
