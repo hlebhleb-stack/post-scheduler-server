@@ -1,4 +1,4 @@
-# Post Scheduler API — ИПР1
+# Post Scheduler API, ИПР1
 
 REST API планировщика постов. JWT-аутентификация, роли, Sequelize + PostgreSQL.
 
