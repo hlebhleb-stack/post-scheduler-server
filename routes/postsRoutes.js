@@ -13,8 +13,8 @@ router.get("/:id", postsController.getPostById);
 // POST /posts — только аутентифицированные
 router.post("/", authMiddleware, validate(createPostSchema), postsController.createPost);
 
-// PUT /posts/:id — moderator и выше
-router.put("/:id", authMiddleware, roleGuard("moderator"), validate(updatePostSchema), postsController.updatePost);
+// PUT /posts/:id — автор поста или админ
+router.put("/:id", authMiddleware, validate(updatePostSchema), postsController.updatePost);
 
 // DELETE /posts/:id — только admin
 router.delete("/:id", authMiddleware, roleGuard("admin"), postsController.deletePost);

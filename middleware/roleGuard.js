@@ -1,4 +1,4 @@
-const ROLE_LEVELS = { user: 1, moderator: 2, admin: 3 };
+const ROLE_LEVELS = { user: 1, admin: 2 };
 
 function roleGuard(requiredRole) {
   return (req, res, next) => {

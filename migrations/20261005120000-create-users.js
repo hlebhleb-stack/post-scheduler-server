@@ -19,17 +19,9 @@ module.exports = {
         allowNull: false,
       },
       role: {
-        type: Sequelize.ENUM("user", "moderator", "admin"),
+        type: Sequelize.ENUM("user", "admin"),
         allowNull: false,
         defaultValue: "user",
-      },
-      failedAttempts: {
-        type: Sequelize.INTEGER,
-        defaultValue: 0,
-      },
-      lockUntil: {
-        type: Sequelize.DATE,
-        allowNull: true,
       },
       createdAt: {
         type: Sequelize.DATE,

@@ -25,17 +25,9 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       role: {
-        type: DataTypes.ENUM("user", "moderator", "admin"),
+        type: DataTypes.ENUM("user", "admin"),
         allowNull: false,
         defaultValue: "user",
-      },
-      failedAttempts: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      lockUntil: {
-        type: DataTypes.DATE,
-        allowNull: true,
       },
     },
     {

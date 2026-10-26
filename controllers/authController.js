@@ -2,9 +2,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 
-const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 минут
-const MAX_FAILED_ATTEMPTS = 5;
-
 async function register(req, res) {
   const { email, password, role } = req.body;
 
@@ -35,37 +32,12 @@ async function login(req, res) {
     return res.status(401).json({ error: "Неверный email или пароль" });
   }
 
-  // Проверяем блокировку
-  if (user.lockUntil && new Date() < new Date(user.lockUntil)) {
-    const remaining = Math.ceil((new Date(user.lockUntil) - new Date()) / 1000 / 60);
-    console.warn(`[SECURITY] Попытка входа в заблокированный аккаунт: ${email}`);
-    return res.status(423).json({
-      error: `Аккаунт заблокирован. Попробуйте через ${remaining} мин.`,
-    });
-  }
-
   const isValid = await bcrypt.compare(password, user.passwordHash);
 
   if (!isValid) {
-    const newAttempts = user.failedAttempts + 1;
-    console.warn(`[SECURITY] Неверный пароль для ${email}, попытка ${newAttempts}/${MAX_FAILED_ATTEMPTS}`);
-
-    if (newAttempts >= MAX_FAILED_ATTEMPTS) {
-      await user.update({
-        failedAttempts: newAttempts,
-        lockUntil: new Date(Date.now() + LOCK_DURATION_MS),
-      });
-      return res.status(423).json({
-        error: `Превышено количество попыток. Аккаунт заблокирован на 15 минут.`,
-      });
-    }
-
-    await user.update({ failedAttempts: newAttempts });
+    console.warn(`[SECURITY] Неверный пароль для ${email}`);
     return res.status(401).json({ error: "Неверный email или пароль" });
   }
-
-  // Успешный вход — сбрасываем счётчик
-  await user.update({ failedAttempts: 0, lockUntil: null });
 
   const token = jwt.sign(
     { id: user.id, email: user.email, role: user.role },

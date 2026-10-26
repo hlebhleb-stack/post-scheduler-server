@@ -34,6 +34,10 @@ async function updatePost(req, res) {
     return res.status(404).json({ error: `Публикация с id=${id} не найдена` });
   }
 
+  if (existing.UserId !== req.user.id && req.user.role !== "admin") {
+    return res.status(403).json({ error: "Редактировать публикацию может только её автор или админ" });
+  }
+
   await existing.update(req.body);
   res.status(200).json(existing);
 }

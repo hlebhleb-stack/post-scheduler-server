@@ -28,16 +28,16 @@ Authorization: Bearer <JWT-токен>
 ```json
 {
   "email": "user@example.com",
-  "password": "Secret123!",
+  "password": "mypassword",
   "role": "user"
 }
 ```
 
 | Поле | Тип | Обязательно | Описание |
 |---|---|---|---|
-| email | string | ✅ | Уникальный email |
-| password | string | ✅ | Мин. 8 симв., цифра, спецсимвол |
-| role | string | ❌ | user / moderator / admin (по умолчанию: user) |
+| email | string | да | Уникальный email |
+| password | string | да | Мин. 6 символов |
+| role | string | нет | user / admin (по умолчанию: user) |
 
 **Ответы:**
 
@@ -47,14 +47,14 @@ Authorization: Bearer <JWT-токен>
   "id": 1,
   "email": "user@example.com",
   "role": "user",
-  "createdAt": "2026-10-05T12:00:00.000Z"
+  "createdAt": "2026-10-26T12:00:00.000Z"
 }
 ```
 
 `400 Bad Request` — ошибка валидации
 ```json
 {
-  "errors": ["Пароль должен содержать минимум 8 символов", "Пароль должен содержать спецсимвол"]
+  "errors": ["Пароль должен содержать минимум 6 символов"]
 }
 ```
 
@@ -75,7 +75,7 @@ Authorization: Bearer <JWT-токен>
 ```json
 {
   "email": "user@example.com",
-  "password": "Secret123!"
+  "password": "mypassword"
 }
 ```
 
@@ -95,13 +95,6 @@ Authorization: Bearer <JWT-токен>
 }
 ```
 
-`423 Locked` — аккаунт заблокирован после 5 неудачных попыток
-```json
-{
-  "error": "Аккаунт заблокирован. Попробуйте через 14 мин."
-}
-```
-
 ---
 
 ### GET /auth/me
@@ -116,17 +109,12 @@ Authorization: Bearer <JWT-токен>
   "id": 1,
   "email": "user@example.com",
   "role": "user",
-  "createdAt": "2026-10-05T12:00:00.000Z",
-  "updatedAt": "2026-10-05T12:00:00.000Z"
+  "createdAt": "2026-10-26T12:00:00.000Z",
+  "updatedAt": "2026-10-26T12:00:00.000Z"
 }
 ```
 
 `401 Unauthorized` — нет токена или токен недействителен
-```json
-{
-  "error": "Токен не предоставлен"
-}
-```
 
 ---
 
@@ -136,7 +124,7 @@ Authorization: Bearer <JWT-токен>
 
 Список всех публикаций. **Публичный.**
 
-**Query-параметры:**
+**Query-параметры (фильтрация):**
 
 | Параметр | Описание |
 |---|---|
@@ -152,11 +140,12 @@ Authorization: Bearer <JWT-токен>
     "id": 1,
     "content": "Текст поста",
     "platform": "telegram",
-    "scheduledAt": "2026-10-10T12:00:00.000Z",
+    "scheduledAt": "2026-10-30T12:00:00.000Z",
     "status": "scheduled",
     "priority": 2,
-    "createdAt": "2026-10-05T12:00:00.000Z",
-    "updatedAt": "2026-10-05T12:00:00.000Z"
+    "UserId": 1,
+    "createdAt": "2026-10-26T12:00:00.000Z",
+    "updatedAt": "2026-10-26T12:00:00.000Z"
   }
 ]
 ```
@@ -187,7 +176,7 @@ Authorization: Bearer <JWT-токен>
 {
   "content": "Текст публикации",
   "platform": "telegram",
-  "scheduledAt": "2026-10-10T12:00:00Z",
+  "scheduledAt": "2026-10-30T12:00:00Z",
   "status": "draft",
   "priority": 2
 }
@@ -195,11 +184,11 @@ Authorization: Bearer <JWT-токен>
 
 | Поле | Тип | Обязательно | Описание |
 |---|---|---|---|
-| content | string | ✅ | Текст поста |
-| platform | string | ✅ | instagram / telegram / vk / twitter / facebook |
-| scheduledAt | string (ISO 8601) | ✅ | Дата публикации |
-| status | string | ❌ | draft / scheduled / published (по умолчанию: draft) |
-| priority | number | ❌ | 1 / 2 / 3 (по умолчанию: 2) |
+| content | string | да | Текст поста |
+| platform | string | да | instagram / telegram / vk / twitter / facebook |
+| scheduledAt | string (ISO 8601) | да | Дата публикации |
+| status | string | нет | draft / scheduled / published (по умолчанию: draft) |
+| priority | number | нет | 1 / 2 / 3 (по умолчанию: 2) |
 
 `201 Created` — пост создан
 
@@ -211,7 +200,7 @@ Authorization: Bearer <JWT-токен>
 
 ### PUT /posts/:id
 
-Обновить публикацию. **Требует роль moderator или admin.**
+Обновить публикацию. **Требует токен. Доступно автору поста или админу.**
 
 **Тело запроса** — любые поля из POST (минимум одно):
 ```json
@@ -223,10 +212,10 @@ Authorization: Bearer <JWT-токен>
 
 `200 OK` — пост обновлён
 
-`403 Forbidden` — недостаточно прав
+`403 Forbidden` — не автор и не админ
 ```json
 {
-  "error": "Недостаточно прав доступа"
+  "error": "Редактировать публикацию может только её автор или админ"
 }
 ```
 
@@ -252,10 +241,9 @@ Authorization: Bearer <JWT-токен>
 |---|---|
 | 400 | Ошибка валидации входных данных |
 | 401 | Нет токена или токен недействителен |
-| 403 | Недостаточно прав (роль) |
+| 403 | Недостаточно прав |
 | 404 | Ресурс не найден |
 | 409 | Конфликт (email уже занят) |
-| 423 | Аккаунт заблокирован |
 | 429 | Превышен лимит запросов |
 | 500 | Внутренняя ошибка сервера |
 
@@ -270,7 +258,7 @@ Authorization: Bearer <JWT-токен>
 | Защита от SQL-инъекций | Sequelize ORM (параметризованные запросы) |
 | XSS и заголовки | helmet |
 | Rate limiting | express-rate-limit: 100 req / 15 min |
-| №3: Сложность пароля | Joi: мин. 8 символов, цифра, спецсимвол |
-| №12: Ограничение тела | express.json({ limit: '10kb' }) |
-| №24: Generic errors | NODE_ENV=production скрывает детали ошибок |
+| Валидация | Joi: проверка типов, форматов, обязательных полей |
+| Ограничение тела | express.json({ limit: '10kb' }) |
+| Generic errors | NODE_ENV=production скрывает детали ошибок |
 | Логирование | console.warn для неудачных входов, 403, rate limit |

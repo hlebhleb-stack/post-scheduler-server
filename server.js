@@ -14,7 +14,6 @@ const isDev = process.env.NODE_ENV !== "production";
 // Helmet — набор защитных HTTP-заголовков (XSS, clickjacking и др.)
 app.use(helmet());
 
-// №12: ограничение размера тела запроса — защита от DoS
 app.use(express.json({ limit: "10kb" }));
 
 // Глобальный rate limiting — не более 100 запросов за 15 минут с одного IP
@@ -48,7 +47,6 @@ app.use((req, res) => {
   res.status(404).json({ error: `Маршрут ${req.method} ${req.originalUrl} не найден` });
 });
 
-// №24: generic errors в продакшене — не раскрываем детали реализации
 app.use((err, req, res, next) => {
   console.error(`[ERROR] ${err.stack}`);
 

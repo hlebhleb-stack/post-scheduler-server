@@ -1,14 +1,13 @@
 {
   "info": {
-    "name": "Post Scheduler — ИПР1",
-    "_postman_id": "ipr1-collection",
+    "name": "Post Scheduler — КР1",
+    "_postman_id": "kr1-collection",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "base", "value": "http://localhost:3000" },
     { "key": "token", "value": "" },
-    { "key": "adminToken", "value": "" },
-    { "key": "modToken", "value": "" }
+    { "key": "adminToken", "value": "" }
   ],
   "item": [
     {
@@ -20,9 +19,8 @@
             "method": "POST",
             "url": "{{base}}/auth/register",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"Password1!\"\n}" }
-          },
-          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('token', ''); }"] } }]
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"pass123\"\n}" }
+          }
         },
         {
           "name": "Register (admin)",
@@ -30,20 +28,11 @@
             "method": "POST",
             "url": "{{base}}/auth/register",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"Admin123!\",\n  \"role\": \"admin\"\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"admin123\",\n  \"role\": \"admin\"\n}" }
           }
         },
         {
-          "name": "Register (moderator)",
-          "request": {
-            "method": "POST",
-            "url": "{{base}}/auth/register",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"mod@test.com\",\n  \"password\": \"Moder123!\",\n  \"role\": \"moderator\"\n}" }
-          }
-        },
-        {
-          "name": "Register — слабый пароль (400)",
+          "name": "Register — короткий пароль (400)",
           "request": {
             "method": "POST",
             "url": "{{base}}/auth/register",
@@ -52,12 +41,21 @@
           }
         },
         {
+          "name": "Register — дубликат email (409)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"pass123\"\n}" }
+          }
+        },
+        {
           "name": "Login (user) — сохраняет токен",
           "request": {
             "method": "POST",
             "url": "{{base}}/auth/login",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"Password1!\"\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"pass123\"\n}" }
           },
           "event": [{ "listen": "test", "script": { "exec": ["var j = pm.response.json(); if (j.token) { pm.collectionVariables.set('token', j.token); }"] } }]
         },
@@ -67,7 +65,7 @@
             "method": "POST",
             "url": "{{base}}/auth/login",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"Admin123!\"\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"admin123\"\n}" }
           },
           "event": [{ "listen": "test", "script": { "exec": ["var j = pm.response.json(); if (j.token) { pm.collectionVariables.set('adminToken', j.token); }"] } }]
         },
@@ -77,7 +75,7 @@
             "method": "POST",
             "url": "{{base}}/auth/login",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"WrongPass1!\"\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"wrongpass\"\n}" }
           }
         },
         {
@@ -102,10 +100,31 @@
       "name": "Posts",
       "item": [
         {
-          "name": "GET /posts — публичный (200)",
+          "name": "GET /posts — все (200)",
           "request": {
             "method": "GET",
             "url": "{{base}}/posts"
+          }
+        },
+        {
+          "name": "GET /posts?platform=telegram — фильтрация (200)",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/posts?platform=telegram"
+          }
+        },
+        {
+          "name": "GET /posts/:id (200)",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/posts/1"
+          }
+        },
+        {
+          "name": "GET /posts/:id — не найден (404)",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/posts/9999"
           }
         },
         {
@@ -130,19 +149,43 @@
           }
         },
         {
-          "name": "PUT /posts/1 — moderator (200)",
+          "name": "POST /posts — невалидные данные (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/posts",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"\",\n  \"platform\": \"tiktok\"\n}" }
+          }
+        },
+        {
+          "name": "PUT /posts/1 — автор (200)",
           "request": {
             "method": "PUT",
             "url": "{{base}}/posts/1",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{modToken}}" }
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Обновлённый контент\",\n  \"platform\": \"telegram\",\n  \"scheduledAt\": \"2026-12-01T12:00:00.000Z\"\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Обновлённый текст\",\n  \"status\": \"published\"\n}" }
           }
         },
         {
-          "name": "DELETE /posts/1 — user → 403",
+          "name": "PUT /posts/1 — не автор (403)",
+          "request": {
+            "method": "PUT",
+            "url": "{{base}}/posts/1",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Админ правит чужой пост\"\n}" }
+          }
+        },
+        {
+          "name": "DELETE /posts/1 — user (403)",
           "request": {
             "method": "DELETE",
             "url": "{{base}}/posts/1",
