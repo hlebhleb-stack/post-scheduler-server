@@ -23,7 +23,9 @@ const logger = createLogger({
 });
 
 if (process.env.LOGTAIL_SOURCE_TOKEN) {
-  const logtail = new Logtail(process.env.LOGTAIL_SOURCE_TOKEN);
+  const logtail = new Logtail(process.env.LOGTAIL_SOURCE_TOKEN, {
+    endpoint: "https://s2831507.us-west-2a.betterstackdata.com",
+  });
   logger.add(new LogtailTransport(logtail));
 }
 
