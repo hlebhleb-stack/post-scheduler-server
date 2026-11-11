@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const logger = require("../logger");
 const { User } = require("../models");
 
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 минут
@@ -31,14 +32,14 @@ async function login(req, res) {
   const user = await User.findOne({ where: { email } });
 
   if (!user) {
-    console.warn(`[SECURITY] Попытка входа с несуществующим email: ${email}`);
+    logger.warn("Login attempt with non-existent email", { email });
     return res.status(401).json({ error: "Неверный email или пароль" });
   }
 
   // Проверяем блокировку
   if (user.lockUntil && new Date() < new Date(user.lockUntil)) {
     const remaining = Math.ceil((new Date(user.lockUntil) - new Date()) / 1000 / 60);
-    console.warn(`[SECURITY] Попытка входа в заблокированный аккаунт: ${email}`);
+    logger.warn("Login attempt on locked account", { email });
     return res.status(423).json({
       error: `Аккаунт заблокирован. Попробуйте через ${remaining} мин.`,
     });
@@ -48,7 +49,7 @@ async function login(req, res) {
 
   if (!isValid) {
     const newAttempts = user.failedAttempts + 1;
-    console.warn(`[SECURITY] Неверный пароль для ${email}, попытка ${newAttempts}/${MAX_FAILED_ATTEMPTS}`);
+    logger.warn("Invalid password", { email, attempt: `${newAttempts}/${MAX_FAILED_ATTEMPTS}` });
 
     if (newAttempts >= MAX_FAILED_ATTEMPTS) {
       await user.update({

@@ -1,10 +1,11 @@
 const jwt = require("jsonwebtoken");
+const logger = require("../logger");
 
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    console.warn(`[SECURITY] Попытка доступа без токена: ${req.method} ${req.originalUrl}`);
+    logger.warn("Access attempt without token", { method: req.method, url: req.originalUrl });
     return res.status(401).json({ error: "Токен не предоставлен" });
   }
 
@@ -15,7 +16,7 @@ function authMiddleware(req, res, next) {
     req.user = payload;
     next();
   } catch (_err) {
-    console.warn(`[SECURITY] Неверный токен: ${req.method} ${req.originalUrl}`);
+    logger.warn("Invalid token", { method: req.method, url: req.originalUrl });
     return res.status(401).json({ error: "Недействительный токен" });
   }
 }
