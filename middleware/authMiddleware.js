@@ -14,7 +14,7 @@ function authMiddleware(req, res, next) {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.user = payload;
     next();
-  } catch (err) {
+  } catch (_err) {
     console.warn(`[SECURITY] Неверный токен: ${req.method} ${req.originalUrl}`);
     return res.status(401).json({ error: "Недействительный токен" });
   }

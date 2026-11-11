@@ -4,7 +4,7 @@ const Joi = require("joi");
 const passwordSchema = Joi.string()
   .min(8)
   .pattern(/[0-9]/, "цифра")
-  .pattern(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, "спецсимвол")
+  .pattern(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/? ]/, "спецсимвол")
   .required()
   .messages({
     "string.min": "Пароль должен содержать минимум 8 символов",
