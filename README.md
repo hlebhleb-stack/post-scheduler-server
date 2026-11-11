@@ -4,10 +4,13 @@ REST API планировщика постов с CI/CD, мониторинго�
 
 ## Продакшен
 
-- **Backend:** https://post-scheduler-server.onrender.com *(заменить после деплоя)*
-- **Мониторинг uptime:** https://uptimerobot.com *(ссылка на статус-страницу после настройки)*
-- **Дашборд ошибок:** https://sentry.io *(ссылка на проект после настройки)*
-- **Telegram-бот уведомлений:** @post_scheduler_bot *(заменить)*
+- **Backend:** https://post-scheduler-server.onrender.com
+- **Frontend:** https://post-scheduler-client.vercel.app
+- **Мониторинг uptime:** UptimeRobot (Backend API + Frontend, каждые 5 мин)
+- **Дашборд ошибок:** Sentry (Node.js + React проекты)
+- **Логи:** Better Stack / Logtail (Winston transport)
+- **Метрики сервера:** https://post-scheduler-server.onrender.com/metrics
+- **Telegram-бот уведомлений:** @postscheduler_ipr2_bot
 
 ## Стек
 
