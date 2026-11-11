@@ -1,23 +1,29 @@
 require("dotenv").config();
 
+const Sentry = require("@sentry/node");
 const express = require("express");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const logger = require("./logger");
+const { requestCounter } = require("./middleware/requestCounter");
 const { sequelize } = require("./models");
 const postsRoutes = require("./routes/postsRoutes");
 const authRoutes = require("./routes/authRoutes");
+const monitoringRoutes = require("./routes/monitoringRoutes");
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV || "development",
+  tracesSampleRate: 1.0,
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const isDev = process.env.NODE_ENV !== "production";
 
-// Helmet — набор защитных HTTP-заголовков (XSS, clickjacking и др.)
 app.use(helmet());
-
-// №12: ограничение размера тела запроса — защита от DoS
 app.use(express.json({ limit: "10kb" }));
 
-// Глобальный rate limiting — не более 100 запросов за 15 минут с одного IP
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -25,17 +31,20 @@ const globalLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Слишком много запросов. Попробуйте позже." },
   handler: (req, res, next, options) => {
-    console.warn(`[SECURITY] Rate limit превышен: IP ${req.ip} → ${req.method} ${req.originalUrl}`);
+    logger.warn("Rate limit exceeded", { ip: req.ip, method: req.method, url: req.originalUrl });
     res.status(options.statusCode).json(options.message);
   },
 });
 app.use(globalLimiter);
 
-// Логирование всех запросов
+app.use(requestCounter);
+
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} ${req.method} ${req.originalUrl}`);
+  logger.info("Incoming request", { method: req.method, url: req.originalUrl });
   next();
 });
+
+app.use("/", monitoringRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Post Scheduler API работает" });
@@ -44,13 +53,19 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/posts", postsRoutes);
 
+// Тестовый маршрут для демонстрации Sentry (намеренная ошибка)
+app.get("/test-error", (req, res, next) => {
+  next(new Error("Test Sentry error — ИПР2 демонстрация"));
+});
+
 app.use((req, res) => {
   res.status(404).json({ error: `Маршрут ${req.method} ${req.originalUrl} не найден` });
 });
 
-// №24: generic errors в продакшене — не раскрываем детали реализации
+Sentry.setupExpressErrorHandler(app);
+
 app.use((err, req, res, next) => {
-  console.error(`[ERROR] ${err.stack}`);
+  logger.error("Unhandled error", { message: err.message, stack: err.stack });
 
   if (isDev) {
     return res.status(500).json({ error: err.message, stack: err.stack });
@@ -61,9 +76,9 @@ app.use((err, req, res, next) => {
 
 sequelize
   .authenticate()
-  .then(() => console.log("Подключение к базе данных установлено"))
-  .catch((err) => console.error("Не удалось подключиться к базе данных:", err.message));
+  .then(() => logger.info("Database connection established"))
+  .catch((err) => logger.error("Database connection failed", { message: err.message }));
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  logger.info(`Server started`, { port: PORT, env: process.env.NODE_ENV || "development" });
 });
