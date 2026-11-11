@@ -17,6 +17,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@logtail/node": "^0.6.1",
     "@logtail/winston": "^0.6.1",
     "@sentry/node": "^11.12.0",
     "bcryptjs": "^3.0.3",
